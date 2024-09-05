@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-TODO doc
-Functionality for conversation analysis
+This module implements some functionality for conversation data analysis.
 
 It exposes the following functionality:
     - <ConversationStats>
-      .
+      Wrapper around a pandas.DataFrame which implements convenience methods
+      for data analysis:
+          - A sum
+          - A binned sum
+          - A rolling sum
     - <word_count_dataframe>
-      .
+      Funtion to structure word counts as a pandas.DataFrame.
 
 """
 
@@ -46,30 +49,39 @@ def datetime_multiindex(index: pd.DatetimeIndex)-> pd.MultiIndex:
 
 class ConversationStats:
     """
-    TODO doc
+    Thin wrapped around a <pandas.DataFrame> that implements convenience
+    methods for its processing and manipulation.
 
-    General container for conversation messages.
-
-    Notes
-    -----
-    * General audio and voicenote messages are not distinguished.
-    * Comparison operators are implemented through comparison of the tuple
-      (timestamp, sender)
+    Each row of the dataframe represents an event indexed by its date. It has
+    the following structure:
+    - It is indexed by a MultiIndex representing the date with the following
+      levels: (year, month, day, hour, minute, second, microsecond,
+               month_name, day_name, timestamp)
+    - The columns represent the data. The first column corresponds to the
+      group related to the event (eg the message sender). The remaining
+      columns must contain numerical data (eg the message length, the presence
+      of photos, etc).
 
     Attributes
     ----------
-    - dataframe : pd.DataFrame
-        ,,
-    - participants : set[str]
-        participant to the message, that is the sender
-                     and reaction actors
+    - dataframe : pandas.DataFrame
+    - groups : dict[str, str], mapping g -> g for all groups present in the
+      dataframe
 
     Methods
     -------
-    - get_dataframe(timespan, groups) :
-    - sum() :
-    - binned_sum(participant_map) :
-    - rolling_sum() :
+    - get_dataframe(timespan, new_groups) : pandas.DataFrame
+        Extract the rows within the `timespan` and map the groups according
+        to `new_groups`.
+    - sum(groups, timespan) : pandas.DataFrame
+        For each group, sum along the dataframe columns.
+    - binned_sum(binning_entries, groups, timespan) : pandas.DataFrame
+        For each unique indices values in `binning_entries` and each group,
+        sum along the dataframe columns.
+    - rolling_sum(sampling_freq, window_size, win_type, win_args,
+                  period, groups, timespan) : pandas.DataFrame
+        Rolling sum along the columns, possibly aggregating the data modulo a
+        given period.
     """
 
     def __init__(self,
@@ -123,7 +135,7 @@ class ConversationStats:
 
     def get_dataframe(self,
                       timespan: tuple | None,
-                      groups: dict[str, str] | None = None,
+                      new_groups: dict[str, str] | None = None,
                       )-> pd.DataFrame:
         """
         Extract the data in a given timespan and map the '_group' column values
@@ -149,8 +161,8 @@ class ConversationStats:
         else:
             df = self.dataframe.loc[timespan[0]:timespan[1], :].copy()
 
-        if groups is not None:
-            df.replace({'_group': groups}, inplace=True)
+        if new_groups is not None:
+            df.replace({'_group': new_groups}, inplace=True)
 
         return df
 
@@ -176,14 +188,18 @@ class ConversationStats:
                    timespan: tuple | None = None,
                    )-> pd.DataFrame:
         """
-        Return binned sum in the given `timespan`, aggregating the senders
-        as `groups`.
-        TODO doc
+        Compute the sum of the columns in the given `timespan`, grouping both
+        by group and by the unique values of the indices corresponding to
+        `binning_entries`.
+
+        Returns a DataFrame (binning_entries x (group, entry)) of the sums.
 
         Parameters
         ----------
         binning_entries : tuple[str, ...]
-            DESCRIPTION.
+            Tuple of dataframe multiindex names. The values must be among
+            {'year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond',
+             'month_name', 'day_name'}.
         groups : dict[str, str] | None, optional
             Mapping old_group -> new_group applied to the '_group' column.
             The default is None (no mapping).
@@ -220,7 +236,7 @@ class ConversationStats:
 
 
     def rolling_sum(self,
-                    sampling_freq: str,
+                    sampling_freq: pd.Timedelta | str,
                     window_size: int,
                     win_type: str | None = None,
                     win_args: dict | None = None,
@@ -230,31 +246,48 @@ class ConversationStats:
                     timespan: tuple | None = None,
                     )-> pd.DataFrame:
         """
-        TODO doc
+        Compute the windowed rolling sum of the columns for each group in the
+        given timespan, with atomic timestep set by `sampling_freq`.
+
+        If a `period` is specified, the rolling sum is computed over the data
+        aggregated modulo that period.
+
+        Returns a DataFrame (time_multiindex x (group, entry)) of the sums.
+        The MultiIndex time_multiindex depends on whether `period` is set:
+        - If set, levels are the components of a Timedelta index:
+          (days, hours, minutes, seconds, milliseconds, timedelta)
+        - If not set, levels are the components of a Timestamp index:
+          (year, month, day, hour, minute, second, microsecond, timestamp)
 
         Parameters
         ----------
-        sampling_freq : str
-            DESCRIPTION.
+        sampling_freq : pandas.Timedelta | str
+            The sampling frequency expressed as a Timedelta. It represents the
+            granularity of the rolling sum, the atomic timestep.
+            The value is converted internally into a pandas.Timedelta, hence
+            it accepts all types of parameters that can be passed to the
+            constructor.
         window_size : int
-            DESCRIPTION.
+            The window size, in units of sampling_freq. See DataFrame.rolling
+            documentation.
         win_type : str | None, optional
-            DESCRIPTION. The default is None.
+            The window type. See DataFrame.rolling documentation.
+            The default is None.
         win_args : dict | None, optional
-            DESCRIPTION. The default is None.
+            Additional window parameters. See DataFrame.rolling documentation.
+            The default is None.
         period : str | None, optional
-            DESCRIPTION. The default is None.
+            Must be in {'year', 'month', 'day', 'hour', 'minute', 'second'}.
+            Aggregation period for the data, before computing the rolling sum.
+            For instance, setting period='day' will yield a rolling sum along
+            the day time.
+            The default is None.
         groups : dict[str, str] | None, optional
             Mapping old_group -> new_group applied to the '_group' column.
             The default is None (no mapping).
         timespan : tuple | None, pair (t0, t1) of tuple[int, ...]
             Time boundaries for data selection (see <get_dataframe> doc).
             The default is None, which selects all data.
-
-        Returns
-        -------
-        gdf : DataFrame
-            DESCRIPTION.
 
         """
         if win_args is None:

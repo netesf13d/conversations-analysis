@@ -23,7 +23,7 @@ from matplotlib.patches import Patch
 
 
 # =============================================================================
-# 
+#
 # =============================================================================
 
 # First 24 xkcd colors from https://xkcd.com/color/rgb/
@@ -115,14 +115,14 @@ def _get_ticks(t0: int, t1: int,
             tick0_ = tick0 + pd.offsets.DateOffset(**{unit + 's': 1})
             if tick0_ - t0_ < t0_ - tick0:
                 tick0 = tick0_
-    
+
         ticks = [tick0 + pd.offsets.DateOffset(**{unit+'s': i*div})
                  for i in range(n)]
         tick_labels = [tick.strftime(strftime) for tick in ticks]
         ticks = pd.DatetimeIndex(ticks).astype('int64')
-        
+
         return list(ticks), tick_labels, "date"
-    
+
     if mode == 'rel':
         ticks = [pd.Timedelta(t0 + i * div * timedeltas[unit])
                  for i in range(n)]
@@ -131,7 +131,7 @@ def _get_ticks(t0: int, t1: int,
                 break
         tick_labels = [str(getattr(tick.components, xlabel)) for tick in ticks]
         ticks = pd.TimedeltaIndex(ticks).astype('int64')
-        
+
         return list(ticks), tick_labels, xlabel
 
 
@@ -164,7 +164,7 @@ def legend_params(dpi: float, legend_kw: dict)-> tuple[tuple[int, int], dict]:
     fig.canvas.draw()
     dx, dy = legend.legendPatch._width, legend.legendPatch._height
     plt.close(fig)
-    
+
     return (dx/dpi, dy/dpi), lkw
 
 
@@ -212,12 +212,12 @@ def pie_plot(dataframe: pd.DataFrame,
     if legend_kw is not None:
         lkw.update(legend_kw)
     (dx, dy), lkw = legend_params(dpi, lkw)
-    
+
     # Figure setup
     nplots = len(dataframe.columns)
     nrows, ncols = (nplots + 2) // 3, min(nplots, 3)
     figsize = (max(dx+0.3, 3*ncols), 3.1*nrows + dy + 0.6)
-    
+
     fig = plt.figure(figsize=figsize, dpi=dpi)
     gs = gridspec.GridSpec(
         nrows, ncols, hspace=0.05, wspace=0.07,
@@ -232,7 +232,7 @@ def pie_plot(dataframe: pd.DataFrame,
         data = dataframe[quantity]
         ax.set_title(f"{quantity} ({data.sum()})", y=1., pad=4,
                      fontweight='bold')
-        
+
         if data.sum() == 0:
             ax.set_frame_on(True)
             continue
@@ -249,9 +249,9 @@ def pie_plot(dataframe: pd.DataFrame,
         for i, label in enumerate(labels):
             ax.annotate(label, xy=(xs[i], ys[i]),
                         ha='center', va='center', fontsize=9)
-    
+
     fig.legend(handles=wedges, **lkw)
-    
+
     return fig, axs
 
 
@@ -300,7 +300,7 @@ def bar_plot(dataframe: pd.DataFrame,
     tot_counts = dataframe.T.sum()
     max_counts = max(tot_counts)
     percents = dataframe.div(tot_counts, axis=0) * 100
-    
+
     # Legend setup
     lkw = {'labels': dataframe.columns.to_list(),
            'ncols': min(3, len(dataframe.columns))}
@@ -326,7 +326,7 @@ def bar_plot(dataframe: pd.DataFrame,
                 if count/max_counts > 0.075: # print only if enough space
                     ax.annotate(f"{pct:.1f}%\n({count})", xy=bar.get_center(),
                                 ha='center', va='center', fontsize=7.5)
-    
+
     # Set x ticks
     ax.set_xlim(-0.6, len(dataframe) - 0.4)
     if dataframe.index.nlevels == 1:
@@ -338,15 +338,15 @@ def bar_plot(dataframe: pd.DataFrame,
     ax.set_xticks(ticks, tick_labels, minor=False)
     ax.set_xticks([i for i in range(len(dataframe)) if i not in set(ticks)],
                   minor=True)
-    
+
     ax.ticklabel_format(axis='y', style='scientific', scilimits=(-3, 3))
     ax.set_ylabel("counts", fontsize=11)
     ax.set_xlabel(dataframe.index.names[0], fontsize=11)
     #ax.set_title(f"{quantity} (tot. {df.sum().sum()})", fontweight='bold')
-    
-    
+
+
     fig.legend(handles=handles, **lkw)
-    
+
     return fig, ax
 
 
@@ -380,7 +380,7 @@ def stack_plot(dataframe: pd.DataFrame,
             For instance, if timescale is set as 'day', the ordinate is
             expressed in counts per day.
         - float: timedelta in seconds
-            
+
         The default is 'day'.
     xlabel_strftime : str, optional
         String format for the x-label. Only used for absolute date plot.
@@ -421,7 +421,7 @@ def stack_plot(dataframe: pd.DataFrame,
     t = (times - times[0]) * 1e-9
     major_ticks = (np.array(major_ticks) - times[0]) * 1e-9
     minor_ticks = (np.array(minor_ticks) - times[0]) * 1e-9
-    
+
     ## Preprocessing: rescale data
     dt = pd.Timedelta(times[1] - times[0]).value
     if isinstance(timescale, str):
@@ -431,7 +431,7 @@ def stack_plot(dataframe: pd.DataFrame,
         scale = timescale * 1e9 / dt
         scale_str = f"{timescale:.4g} s"
     df = dataframe * scale
-    
+
     # Legend setup
     lkw = {'labels': df.columns.to_list(),
            'ncols': min(3, len(df.columns))}
@@ -456,5 +456,5 @@ def stack_plot(dataframe: pd.DataFrame,
     ax.set_ylabel(f"counts / {scale_str}", fontsize=11)
     ax.set_xlabel(xlabel, fontsize=11)
     fig.legend(handles=polys, **lkw)
-    
+
     return fig, ax
