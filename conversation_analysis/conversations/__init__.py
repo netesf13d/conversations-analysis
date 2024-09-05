@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Load and instanciate Conversations.
+Module implementing conversation loading and management.
 """
 
 from .messenger import MessengerConversation, list_messenger_conversations

@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-TODO doc
-This module implements the core functionality to load, manipulate and modify
-messages and conversations.
+This module implements the core Message and Conversation management
+functionality.
 
-Functions and classes from this module are not meant to be used from outside
-the package.
+It defines:
+- Items, NamedTuples holding information about the different media or other
+  shared content. These are:
+  <Reaction>, <Photo>, <Video>, <Audio>, <File>, <Shared>, <Gif>.
+- <MediaInfo>, NamedTuple holding all the relevant information relative to
+  a shared media. Can be used to scrape the conversation media for instance.
+- <Message>, the container class for messages.
+- <Conversation>, the base class representing a conversation, essentially as
+  a list of <Message>s. It implements the methods for data extraction and basic
+  analysis (eg messages filtration).
 
-It exposes the following functionality:
-    - <resolverd_uri>
-      .
-    - <Message>
-      Container class for conversation messages.
-    - <Conversation>
-      Represents a conversation as a list of messages with additional
-      functionality to extract data and analyze the conversation.
-
+Classes from this module are not meant to be instanciated directly.
+<Conversation>s should be instanciated from the appropriate subclass, either
+<MessengerConversation> or <WhatsappConversation>. <Message>s should be
+instanciated by a <Conversation>.
 """
 
 import json
@@ -76,8 +78,8 @@ class MediaInfo(NamedTuple):
 Item = Reaction | Photo | Audio | Video | File | Shared | Gif
 
 
-def load_item(item: list[dict] | dict | None,
-              item_cls: Item)-> list[Item] | Item | None:
+def _load_item(item: list[dict] | dict | None,
+               item_cls: Item)-> list[Item] | Item | None:
     """
     Unpack a dict/list[dict] into the corresponding Item/list[Item].
 
@@ -88,10 +90,10 @@ def load_item(item: list[dict] | dict | None,
         In some cases, the item elements contain additional keys that do
         not appear as attributes of the corresponding Item class. These are
         considered irrelevant and are not passed to the initializer.
-        An example is the `video` item of old conversations, which contains
-        a `thumbnail` -> dict key.
+        An example is the 'video' item of old conversations, which contains
+        a 'thumbnail' -> dict key.
     item_cls : Item
-        DESCRIPTION.
+        The corresponding item class (eg Photo, Video, etc).
 
     """
     if item is None:
@@ -195,13 +197,13 @@ class Message():
         self.timestamp: float = timestamp # seconds
         # Non-mandatory attributes
         self.content: str = content
-        self.reactions: list[Reaction] = load_item(reactions, Reaction)
-        self.photos: list[Photo] = load_item(photos, Photo)
-        self.videos: list[Video] = load_item(videos, Video)
-        self.audio: list[Audio] = load_item(audio, Audio)
-        self.files: list[File] = load_item(files, File)
-        self.gifs: list[Gif] = load_item(gifs, Gif)
-        self.shared: Shared | None = load_item(shared, Shared)
+        self.reactions: list[Reaction] = _load_item(reactions, Reaction)
+        self.photos: list[Photo] = _load_item(photos, Photo)
+        self.videos: list[Video] = _load_item(videos, Video)
+        self.audio: list[Audio] = _load_item(audio, Audio)
+        self.files: list[File] = _load_item(files, File)
+        self.gifs: list[Gif] = _load_item(gifs, Gif)
+        self.shared: Shared | None = _load_item(shared, Shared)
 
 
     def __repr__(self)-> str:
