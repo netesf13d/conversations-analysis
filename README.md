@@ -25,7 +25,7 @@ The package features:
   - Stack plots for rolling sums
 
 
-## Exeample usage
+## Example usage
 
 For a thorough study of an example dummy conversation, two Jupyter notebooks are available [here](https://github.com/netesf13d/conversations-analysis/tree/main/examples), which can be easily adapted to your archives files. Nevertheless, using the package to get quick analytics report on the conversation is easy!
 
