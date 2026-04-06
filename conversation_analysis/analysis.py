@@ -42,7 +42,6 @@ def datetime_multiindex(index: pd.DatetimeIndex)-> pd.MultiIndex:
              'microsecond',
              'month_name', 'day_name', 'timestamp']
     idx = pd.MultiIndex.from_arrays(idx_arr, names=names)
-    # idx.name = 'date'
     return idx
 
 
@@ -90,7 +89,7 @@ class ConversationStats:
                  data: dict[str, np.ndarray],
                  )-> None:
         """
-        Instanciate a ConversationStats from a list of events.
+        Instantiate a ConversationStats from a list of events.
 
         Events comprise three informations:
         - The timestamp of the event (eg a message post date)

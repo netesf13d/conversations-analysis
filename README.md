@@ -31,7 +31,27 @@ The package features:
   - Stack plots for rolling sums
 
 
-## Example usage
+## Usage
+
+Setup the Python environment to run the example notebooks.
+- With `pip`,
+  ```bash
+  pip install -r requirements.txt
+  ```
+- Using `conda`,
+  ```bash
+  conda create --name <env_name> --file requirements.txt
+  conda activate <env_name>
+  ```
+- Using `uv`,
+  ```bash
+  uv venv .venv
+  source .venv/bin/activate   # On Windows: .venv\Scripts\activate
+  uv pip install -r requirements.txt
+  ```
+
+
+## Examples
 
 For a thorough study of an example dummy conversation, two Jupyter notebooks are available [here](https://github.com/netesf13d/conversations-analysis/tree/main/examples), which can be easily adapted to your archives files. Nevertheless, using the package to get quick analytics report on the conversation is easy!
 
@@ -66,7 +86,7 @@ df = messages_stats.sum() # pandas DataFrame
 fig, axs = pie_plot(df)
 ```
 <p align="center">
-    <img src="https://github.com/netesf13d/conversations-analysis/blob/main/examples/figures_and_data/msg_pc_participant.png" width="600" />
+    <img src="examples/figures_and_data/msg_pc_participant.png" width="600" />
 </p>
 
 
@@ -78,7 +98,7 @@ df = messages_stats.binned_sum(binning_entries=('hour',), groups=None, timespan=
 fig, ax = bar_plot(df['has_content'])
 ```
 <p align="center">
-    <img src="https://github.com/netesf13d/conversations-analysis/blob/main/examples/figures_and_data/msg_bp_participants_hour.png" width="600" />
+    <img src="examples/figures_and_data/msg_bp_participants_hour.png" width="600" />
 </p>
 
 
@@ -92,7 +112,7 @@ fig, ax = stack_plot(df['has_content'], baseline='wiggle',
                      timescale='day', xlabel_strftime='%Y-%m')
 ```
 <p align="center">
-    <img src="https://github.com/netesf13d/conversations-analysis/blob/main/examples/figures_and_data/msg_sp_participants_whole.png" width="600" />
+    <img src="examples/figures_and_data/msg_sp_participants_whole.png" width="600" />
 </p>
 
 
@@ -108,15 +128,8 @@ word_count_df = word_count_dataframe(wd_counts, words)
 fig, axs = pie_plot(word_count_df)
 ```
 <p align="center">
-    <img src="https://github.com/netesf13d/conversations-analysis/blob/main/examples/figures_and_data/word_pc.png" width="600" />
+    <img src="examples/figures_and_data/word_pc.png" width="600" />
 </p>
-
-
-## Dependencies
-
-- [numpy](https://numpy.org/)
-- [pandas](https://pandas.pydata.org/)
-- [matplotlib](https://matplotlib.org/)
 
 
 ## Notes

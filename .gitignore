@@ -51,3 +51,4 @@ __pycache__/
 *.json
 pgdb/
 _.*/
+fonts/
